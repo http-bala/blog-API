@@ -13,6 +13,10 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
+app.get('/',(req,res)=>{
+    return res.send("Api is Working");
+})
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/blogs', blogRoutes);
