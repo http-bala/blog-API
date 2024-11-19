@@ -1,8 +1,8 @@
 const express = require('express');
-const Blog = require('../models/Blog');
+const Blog = require('../models/Blog.js'); // Ensure this matches your actual Blog model path
 const router = express.Router();
-const upload = require('../middleware/upload'); // Adjust path if necessary
-
+const upload = require('../middleware/upload.js');
+const { cloudinary } = require('../middleware/cloudinary.js');
 
 // Get all blogs
 router.get('/', async (req, res) => {
@@ -25,6 +25,26 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Add a new blog with image upload
+router.post('/', upload.single('image'), async (req, res) => {
+  try {
+    const { title, postBy, content } = req.body;
+
+    // Upload to Cloudinary
+    let imageUrl = '';
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, { folder: 'blog_images' });
+      imageUrl = result.secure_url;
+    }
+
+    const blog = new Blog({ title, image: imageUrl, postBy, content });
+    await blog.save();
+    res.status(201).json(blog);
+  } catch (err) {
+    console.error('Error creating blog:', err.message);
+    res.status(500).json({ message: 'Failed to create blog' });
+  }
+});
 
 // Add a comment to a blog
 router.post('/:id/comments', async (req, res) => {
@@ -37,30 +57,9 @@ router.post('/:id/comments', async (req, res) => {
     await blog.save();
     res.json(blog);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Error adding comment:', err.message);
+    res.status(500).json({ message: 'Failed to add comment' });
   }
 });
-
-router.post('/', upload.single('image'), async (req, res) => {
-    try {
-      console.log('Request Body:', req.body);
-      console.log('Request File:', req.file); // Should show uploaded file details
-  
-      const { title, postBy, content } = req.body;
-      const image = req.file ? req.file.path : null;
-  
-      const blog = new Blog({ title, image, postBy, content });
-      await blog.save();
-  
-      res.status(201).json(blog);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: err.message });
-    }
-  });
-  
-  
-  
-  
 
 module.exports = router;
