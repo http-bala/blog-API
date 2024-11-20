@@ -46,6 +46,26 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
+// Delete a blog by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id);
+    if (!blog) return res.status(404).json({ message: 'Blog not found' });
+
+    // Delete the associated image from Cloudinary, if it exists
+    if (blog.image) {
+      const imagePublicId = blog.image.split('/').pop().split('.')[0]; // Extract public ID from URL
+      await cloudinary.uploader.destroy(`blog_images/${imagePublicId}`);
+    }
+
+    await blog.deleteOne();
+    res.json({ message: 'Blog deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting blog:', err.message);
+    res.status(500).json({ message: 'Failed to delete blog' });
+  }
+});
+
 // Add a comment to a blog
 router.post('/:id/comments', async (req, res) => {
   try {
