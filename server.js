@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const blogRoutes = require('./routes/blogRoutes');
+const userRoutes = require('./routes/userRoutes');
 const path = require('path');
 
 dotenv.config();
@@ -23,17 +24,14 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Set up EJS view engine (if needed)
-app.set('view engine', 'ejs');
-app.set('views', path.resolve('./views'));
-
 // Test Route
 app.get('/', (req, res) => {
-  return res.render('homepage');
+  return res.send("API is working");
 });
 
-// Blog Routes
+// Routes
 app.use('/api/blogs', blogRoutes);
+app.use('/api/auth', userRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 5000;
